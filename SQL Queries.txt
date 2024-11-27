@@ -1,0 +1,188 @@
+--1-KPI’s: 
+--1.Net Sales:
+CREATE VIEW netsales as
+SELECT SUM((UnitPrice * Quantity) - Discount) AS NetSales
+FROM [Order Details];
+
+-- 2.Count of Customers:
+CREATE VIEW countofcustomers AS
+SELECT COUNT(DISTINCT CustomerID) AS COUNTOfCustomers
+FROM Orders
+
+-- 3.Count of Orders:
+CREATE VIEW countoforders AS
+SELECT COUNT(DISTINCT OrderID) AS COUNTOfOrders
+FROM Orders
+
+-- 4.Avg days to ship the order:
+CREATE VIEW avgdaystoship AS
+SELECT AVG(CAST(ShippedDate - OrderDate AS int)) AS AvgDaysToShip
+FROM Orders
+WHERE ShippedDate IS NOT NULL AND OrderDate IS NOT NULL;
+
+
+
+
+
+
+
+--2-Revenue Report: 
+--1.Net profit:
+CREATE VIEW netprofit AS
+SELECT SUM((UnitPrice * Quantity) - (Discount * UnitPrice * Quantity) - Freight ) AS NetProfit
+--OR SELECT SUM(UnitPrice*Quantity*(1-Discount)) AS NetProfit
+FROM Orders o
+join [Order Details] od on o.OrderID=od.OrderID;
+
+--2.Total Discounts:
+CREATE VIEW totaldiscounts AS
+SELECT SUM(Discount * UnitPrice * Quantity) AS TotalDiscounts  --Discount is not the total discount amount but rather the discount rate.
+FROM [Order Details];
+
+--3.Shipping Cost:
+CREATE VIEW totalshippingcost AS
+SELECT SUM(Freight) AS TotalShippingCost
+FROM Orders;
+
+
+
+
+
+
+--3-Customers Report: 
+--1.avg net sales per customer:
+CREATE VIEW avgnetsalespercustomer AS
+SELECT 
+    CustomerID, 
+    AVG((UnitPrice * Quantity)-discount) AS AvgNetSales
+FROM Orders o
+JOIN [Order Details] od ON o.OrderID = od.OrderID
+GROUP BY CustomerID;
+
+--2.avg profit per customer:
+CREATE VIEW avgprofitpercustomer AS
+SELECT 
+    CustomerID, 
+    AVG((UnitPrice * Quantity) - (Discount * UnitPrice * Quantity) - Freight) AS AvgProfit
+FROM Orders o
+JOIN [Order Details] od ON o.OrderID = od.OrderID
+GROUP BY CustomerID;
+
+--3.avg shipping cost per customer:
+CREATE VIEW avgshippingcostpercustomer AS
+SELECT 
+    CustomerID, 
+    AVG(Freight) AS AvgShippingCost
+FROM Orders
+GROUP BY CustomerID;
+
+
+
+
+
+
+--4-Products report: 
+--1.Net profit per order:
+CREATE VIEW netprofitperorder AS
+SELECT 
+    o.OrderID, 
+    SUM((od.UnitPrice - (od.UnitPrice * 0.07)) * od.Quantity - o.freight) AS NetProfit
+FROM 
+    [Order Details] od
+JOIN 
+    Orders o 
+ON 
+    o.OrderID = od.OrderID
+GROUP BY 
+    o.OrderID;
+
+--2.Shipping cost per order:
+CREATE VIEW shippingcostperorder AS
+SELECT 
+    OrderID, 
+    Freight AS ShippingCost
+FROM Orders;
+
+--3.Net sales per order:
+CREATE VIEW netsalesperorder AS
+SELECT 
+    OrderID, 
+    SUM((UnitPrice * Quantity)-discount) AS NetSales
+FROM [Order Details]
+GROUP BY OrderID;
+
+--4.Count of products:
+CREATE VIEW countofproducts AS
+SELECT COUNT(DISTINCT ProductID) AS ProductCount
+FROM Products;
+
+--5.Count of categories:
+CREATE VIEW countofcategories AS
+SELECT COUNT(DISTINCT CategoryID) AS CategoryCount
+FROM Categories;
+
+--6.Percentage of discontinued products and products are selling:
+CREATE VIEW percentageofdiscontinuedproducts AS
+SELECT 
+    (COUNT(CASE WHEN Discontinued = 1 THEN 1 END) * 100.0) / COUNT(*) AS PercentageDiscontinued,
+    (COUNT(CASE WHEN Discontinued = 0 THEN 1 END) * 100.0) / COUNT(*) AS PercentageSelling
+FROM Products;
+
+
+
+
+
+
+--5-Employee Report: 
+--1.Net sales per employee or avg:
+CREATE VIEW netsalesperemployeeoravg AS
+SELECT 
+    EmployeeID, 
+    SUM((UnitPrice * Quantity)-discount) AS NetSales,
+    AVG((UnitPrice * Quantity)-discount) AS AverageNetSales
+FROM Orders o
+JOIN  [Order Details] od ON o.OrderID = od.OrderID
+GROUP BY EmployeeID;
+
+--2.Count Orders per employee or avg:
+CREATE VIEW countordersperemployeeoravg AS
+SELECT 
+    EmployeeID, 
+    COUNT(OrderID) AS OrderCount,
+	AVG(COUNT(OrderID)) OVER () AS AvgOrdersPerEmployee
+FROM Orders
+GROUP BY EmployeeID;
+
+--3.Count of employees or avg:
+CREATE VIEW countofemployeesoravg AS
+SELECT COUNT(*) AS EmployeeCount, AVG(EmployeeID) AS EmployeeAvg
+FROM Employees;
+
+--4.Count of supervisors or avg:
+CREATE VIEW countofsupervisorsoravg AS
+SELECT COUNT(DISTINCT ReportsTo) AS SupervisorCount, AVG(DISTINCT ReportsTo) AS SupervisorAvg
+FROM Employees
+WHERE ReportsTo IS NOT NULL;
+
+
+
+
+
+
+--6-Shippers Report: 
+--1.Shipping cost by order:
+CREATE VIEW shippingcostbyorderreport AS
+SELECT 
+    OrderID, 
+    Freight AS ShippingCost
+FROM Orders;
+
+--2.Avg days to ship:
+CREATE VIEW avgdaystoshipreport AS
+SELECT 
+    OrderID, 
+    AVG(CAST(ShippedDate - OrderDate AS int)) AS AvgDaysToShip
+FROM Orders
+GROUP BY OrderID;
+
+
